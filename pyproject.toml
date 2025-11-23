@@ -1,0 +1,33 @@
+[project]
+name = "triton-prep"
+version = "0.1.0"
+description = "CLI tool for preparing HuggingFace models for Triton Inference Server."
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "typer>=0.12.3",
+    "transformers>=4.40.0",
+    "accelerate>=0.27.0",
+    "onnx>=1.16.0",
+    "onnxruntime>=1.17.0",
+    "onnxconverter-common>=1.16.0",
+    "pydantic>=2.6.0",
+    "onnxscript>=0.5.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.10.0",
+    "ruff>=0.3.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["triton_prep"]
+
+[project.scripts]
+triton-prep = "triton_prep.cli.app:cli"
