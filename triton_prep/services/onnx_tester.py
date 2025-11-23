@@ -1,14 +1,20 @@
+from pathlib import Path
+from typing import Any, Sequence
+
 import numpy as np
 import onnxruntime as ort
+from numpy.typing import DTypeLike, NDArray
 
 
 class OnnxTester:
-    def test(self, model_path):
-        session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
+    def test(self, model_path: Path | str) -> None:
+        session = ort.InferenceSession(
+            str(model_path), providers=["CPUExecutionProvider"]
+        )
         feeds = {inp.name: self._make_tensor(inp) for inp in session.get_inputs()}
         session.run(None, feeds)
 
-    def _make_tensor(self, inp):
+    def _make_tensor(self, inp: ort.NodeArg) -> NDArray[Any]:
         dtype = self._dtype_from_onnx(inp.type)
         shape = self._resolve_shape(inp.shape)
         name = inp.name.lower()
@@ -16,15 +22,15 @@ class OnnxTester:
         if dtype in (np.int32, np.int64):
             if "mask" in name:
                 return np.ones(shape, dtype=dtype)
-            return np.random.randint(1, 50, size=shape, dtype=dtype)
+            return np.random.randint(1, 50, size=shape).astype(dtype)
 
         if dtype == np.bool_:
             return np.ones(shape, dtype=dtype)
 
         return np.random.randn(*shape).astype(dtype)
 
-    def _resolve_shape(self, shape):
-        dims = []
+    def _resolve_shape(self, shape: Sequence[Any]) -> tuple[int, ...]:
+        dims: list[int] = []
         for idx, dim in enumerate(shape):
             if isinstance(dim, int) and dim > 0:
                 dims.append(dim)
@@ -34,8 +40,8 @@ class OnnxTester:
                 dims.append(16)
         return tuple(dims) if dims else (1,)
 
-    def _dtype_from_onnx(self, onnx_type: str):
-        mapping = {
+    def _dtype_from_onnx(self, onnx_type: str) -> DTypeLike:
+        mapping: dict[str, DTypeLike] = {
             "tensor(int64)": np.int64,
             "tensor(int32)": np.int32,
             "tensor(int16)": np.int16,

@@ -16,9 +16,7 @@ def _build_cli() -> Typer:
         help="Export HuggingFace model, build Triton model repository, generate config.pbtxt.",
     )
 
-    app.add_typer(
-        info_command, help="Display information about a HuggingFace model."
-    )
+    app.add_typer(info_command, help="Display information about a HuggingFace model.")
 
     app.add_typer(
         check_command,

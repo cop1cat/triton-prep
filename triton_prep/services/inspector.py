@@ -112,7 +112,9 @@ class ModelInspector:
         )
         return TaskType.FEATURE_EXTRACTION
 
-    def _task_from_architectures(self, architectures: list[str] | None) -> TaskType | None:
+    def _task_from_architectures(
+        self, architectures: list[str] | None
+    ) -> TaskType | None:
         """
         Maps HF architecture names to TaskType.
         """

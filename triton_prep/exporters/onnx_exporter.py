@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
+from typing import cast
 
-import torch
 import onnx
+import torch
 from onnxconverter_common import float16
 from transformers import (
     AutoModel,
@@ -12,6 +13,7 @@ from transformers import (
     AutoModelForTokenClassification,
     AutoTokenizer,
 )
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from triton_prep.exporters.base import (
     MODEL_ONNX_FILENAME,
@@ -31,7 +33,10 @@ class OnnxExporter(BaseExporter):
 
     def export(self, cfg: ExportConfig) -> Path:
         model = self._load_model(cfg)
-        tokenizer = AutoTokenizer.from_pretrained(cfg.model_id)
+        tokenizer = cast(
+            PreTrainedTokenizerBase,
+            AutoTokenizer.from_pretrained(cfg.model_id),  # type: ignore[no-untyped-call]
+        )
 
         model.eval()
         cfg.output_dir.mkdir(parents=True, exist_ok=True)
@@ -68,7 +73,7 @@ class OnnxExporter(BaseExporter):
 
         return output_path
 
-    def _load_model(self, cfg: ExportConfig):
+    def _load_model(self, cfg: ExportConfig) -> torch.nn.Module:
         factory = {
             TaskType.TEXT_CLASSIFICATION: AutoModelForSequenceClassification,
             TaskType.TOKEN_CLASSIFICATION: AutoModelForTokenClassification,
@@ -76,9 +81,12 @@ class OnnxExporter(BaseExporter):
             TaskType.SEQ2SEQ_LM: AutoModelForSeq2SeqLM,
         }
         constructor = factory.get(cfg.task_type, AutoModel)
-        return constructor.from_pretrained(cfg.model_id)
+        model = constructor.from_pretrained(cfg.model_id)
+        return cast(torch.nn.Module, model)
 
-    def _dummy_inputs(self, tokenizer, task: TaskType):
+    def _dummy_inputs(
+        self, tokenizer: PreTrainedTokenizerBase, task: TaskType
+    ) -> dict[str, torch.Tensor]:
         encoder_inputs = tokenizer(
             ["hello world", "foo bar"],
             return_tensors="pt",
@@ -86,7 +94,7 @@ class OnnxExporter(BaseExporter):
             max_length=16,
             truncation=True,
         )
-        inputs = dict(encoder_inputs)
+        inputs: dict[str, torch.Tensor] = dict(encoder_inputs)
 
         if task == TaskType.SEQ2SEQ_LM:
             decoder_inputs = tokenizer(
