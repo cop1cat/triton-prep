@@ -78,7 +78,6 @@ The first command ensures the repository has the expected layout. The second spi
 
 ```bash
 uv run python -m triton_prep --help
-uv run pytest          # if/when the project gains tests
 ```
 
 Linting is configured through `ruff` and type checking via `mypy`. Feel free to extend the CLI or exporter for additional text tasks—just keep the MVP goal of text-only coverage in mind.
