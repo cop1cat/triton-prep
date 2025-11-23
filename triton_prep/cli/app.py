@@ -13,17 +13,15 @@ def _build_cli() -> Typer:
 
     app.add_typer(
         prepare_command,
-        name="prepare",
         help="Export HuggingFace model, build Triton model repository, generate config.pbtxt.",
     )
 
     app.add_typer(
-        info_command, name="info", help="Display information about a HuggingFace model."
+        info_command, help="Display information about a HuggingFace model."
     )
 
     app.add_typer(
         check_command,
-        name="check",
         help="Validate Triton model repository or run ONNX inference test.",
     )
 
